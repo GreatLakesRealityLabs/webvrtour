@@ -61,6 +61,8 @@ window.Panorama = (function () {
     var lonSegments = 40;
 
     // Create the vertices
+    // We're basically trying to create a simple spherical projection (to give that panorama feeling)
+    // Then we apply a texture (3d image) to complete the panorama view
     for (var i=0; i <= latSegments; ++i) {
       var theta = i * Math.PI / latSegments;
       var sinTheta = Math.sin(theta);
@@ -81,7 +83,7 @@ window.Panorama = (function () {
       }
     }
 
-    // Create the indices
+    // Create the indices, so we don't have to duplicate vertex data
     for (var i = 0; i < latSegments; ++i) {
       var offset0 = i * (lonSegments+1);
       var offset1 = (i+1) * (lonSegments+1);
@@ -149,22 +151,28 @@ Panorama.prototype.render = function (projectionMat, modelViewMat) {
 
     glProgram.use();
 
+    // Send the projection & modelView transformation matrices to the vertex shader (To GPU)
     gl.uniformMatrix4fv(glProgram.uniform.projectionMat, false, projectionMat);
     gl.uniformMatrix4fv(glProgram.uniform.modelViewMat, false, modelViewMat);
 
+    // Ensure we bind the buffers before sending it over, so that WebGL can internally prepare the global shader variables
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
+    // Enable Position / Texture attributes so they can be used
     gl.enableVertexAttribArray(glProgram.attrib.position);
     gl.enableVertexAttribArray(glProgram.attrib.texCoord);
-
+    
+    // Define the memory layout of the vertex buffer object, so WebGL knows where to fetch them
     gl.vertexAttribPointer(glProgram.attrib.position, 3, gl.FLOAT, false, 20, 0);
     gl.vertexAttribPointer(glProgram.attrib.texCoord, 2, gl.FLOAT, false, 20, 12);
 
+    // Apply texture (the 3d jpeg image)
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(this.glProgram.uniform.diffuse, 0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
+    // Render the scene
     gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
   };
 

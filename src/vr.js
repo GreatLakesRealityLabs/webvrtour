@@ -12,11 +12,8 @@
 (function () {
   "use strict";
 
-  // Global variables
-
   // Interface to the VR Device
   var vrDisplay = null;
-
   // Frame Data of type VRFrameData
   // populated from vrDisplay.getFrameData. We will use this frame to draw the scene.
   var frameData = null;
@@ -35,6 +32,7 @@
   var panorama = null;
   var webglCanvas = document.getElementById("webgl-canvas");
 
+  // Performs initialization of WebGL & Panorama module
   function init(preserveDrawingBuffer) {
     var glAttribs = {
       alpha: false,
@@ -42,7 +40,10 @@
       preserveDrawingBuffer: preserveDrawingBuffer
     };
     gl = webglCanvas.getContext("webgl", glAttribs);
+    // Utilize depth buffer to perform depth testing. This improves performance as we don't draw
+    // fragments that is behind other geometry or is too far
     gl.enable(gl.DEPTH_TEST);
+    // Enable culling to improve performance. No need to draw triangles that we can't see
     gl.enable(gl.CULL_FACE);
 
     panorama = new Panorama(gl);
@@ -140,7 +141,7 @@
     }
   }
 
-  // Program Initialization
+  // Program Entry
   if (navigator.getVRDisplays) {
     frameData = new VRFrameData();
 
