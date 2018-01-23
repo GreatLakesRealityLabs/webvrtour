@@ -33,11 +33,11 @@
   var webglCanvas = document.getElementById("webgl-canvas");
 
   // Performs initialization of WebGL & Panorama module
-  function init(preserveDrawingBuffer) {
+  function init() {
     var glAttribs = {
       alpha: false,
       antialias: false,
-      preserveDrawingBuffer: preserveDrawingBuffer
+      preserveDrawingBuffer: true
     };
     gl = webglCanvas.getContext("webgl", glAttribs);
     // Utilize depth buffer to perform depth testing. This improves performance as we don't draw
@@ -154,19 +154,19 @@
         vrDisplay.depthNear = 0.1;
         vrDisplay.depthFar = 1024.0;
 
-        init(true);
+        init();
         vrPresentButton = VRSamplesUtil.addButton("Enter VR", "E", "media/icons/cardboard64.png", onVRRequestPresent);
 
         window.addEventListener('vrdisplaypresentchange', onVRPresentChange, false);
       } else {
-        init(false);
-        VRSamplesUtil.addInfo("WebVR supported, but no VRDisplays found.", 3000);
+        init();
+        VRSamplesUtil.addInfo("WebVR supported, but no VRDisplays found.");
       }
     }, function () {
       VRSamplesUtil.addError("Error initializing WebVR!");
     });
   } else {
-    init(false);
+    init();
     VRSamplesUtil.addError("Your browser does not support WebVR.");
   }
 })();
