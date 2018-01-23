@@ -1,6 +1,13 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/**
+ * @author: Sokwhan Huh
+ * @date: January 22nd, 2018
+ * 
+ * Panorama renderer using WebGL
+ * 
+ * Original Source referenced from https://github.com/toji/webvr.info
+ * 
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ */
 
 window.Panorama = (function () {
   "use strict";
@@ -8,6 +15,7 @@ window.Panorama = (function () {
   var projectionMat = mat4.create();
   var viewMat = mat4.create();
 
+  // Define Vertex Shader & Fragment Shader code to be ran on GPU side
   var panoVS = [
     "uniform mat4 projectionMat;",
     "uniform mat4 modelViewMat;",
@@ -36,14 +44,14 @@ window.Panorama = (function () {
 
     this.texture = gl.createTexture();
 
-    this.program = new WGLUProgram(gl);
-    this.program.attachShaderSource(panoVS, gl.VERTEX_SHADER);
-    this.program.attachShaderSource(panoFS, gl.FRAGMENT_SHADER);
-    this.program.bindAttribLocation({
+    this.glProgram = new WGLUProgram(gl);
+    this.glProgram.attachShaderSource(panoVS, gl.VERTEX_SHADER);
+    this.glProgram.attachShaderSource(panoFS, gl.FRAGMENT_SHADER);
+    this.glProgram.bindAttribLocation({
       position: 0,
       texCoord: 1
     });
-    this.program.link();
+    this.glProgram.link();
 
     var panoVerts = [];
     var panoIndices = [];
@@ -128,40 +136,37 @@ window.Panorama = (function () {
     });
   };
 
+// Renders the scene given a projection matrix & modelView Matrix
+// Notice we've squashed model & view matrix together
+// This is because we never have to care about applying model transformation in panorama view,
+// since the user can never move around in the scene, meaning we never have to apply scaling / rotation / translation to the model.
 Panorama.prototype.render = function (projectionMat, modelViewMat) {
     var gl = this.gl;
-    var program = this.program;
+    var glProgram = this.glProgram;
 
     if (!this.imgElement)
       return;
 
-    program.use();
+    glProgram.use();
 
-    gl.uniformMatrix4fv(program.uniform.projectionMat, false, projectionMat);
-    gl.uniformMatrix4fv(program.uniform.modelViewMat, false, modelViewMat);
+    gl.uniformMatrix4fv(glProgram.uniform.projectionMat, false, projectionMat);
+    gl.uniformMatrix4fv(glProgram.uniform.modelViewMat, false, modelViewMat);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
-    gl.enableVertexAttribArray(program.attrib.position);
-    gl.enableVertexAttribArray(program.attrib.texCoord);
+    gl.enableVertexAttribArray(glProgram.attrib.position);
+    gl.enableVertexAttribArray(glProgram.attrib.texCoord);
 
-    gl.vertexAttribPointer(program.attrib.position, 3, gl.FLOAT, false, 20, 0);
-    gl.vertexAttribPointer(program.attrib.texCoord, 2, gl.FLOAT, false, 20, 12);
+    gl.vertexAttribPointer(glProgram.attrib.position, 3, gl.FLOAT, false, 20, 0);
+    gl.vertexAttribPointer(glProgram.attrib.texCoord, 2, gl.FLOAT, false, 20, 12);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.uniform1i(this.program.uniform.diffuse, 0);
+    gl.uniform1i(this.glProgram.uniform.diffuse, 0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
     gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
   };
-
-  Panorama.prototype.drawFrame = function(gl, mat4, webglCanvas) {
-    // Clear existing buffers
-    gl.viewport(0, 0, webglCanvas.width, webglCanvas.height);
-    mat4.perspective(projectionMat, Math.PI * 0.4, webglCanvas.width / webglCanvas.height, 0.1, 1024.0);
-    this.render(projectionMat, viewMat);
-  }
 
   return Panorama;
 })();

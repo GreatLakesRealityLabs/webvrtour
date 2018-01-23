@@ -1,6 +1,13 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/**
+ * @author: Sokwhan Huh
+ * @date: January 22nd, 2018
+ * 
+ * Assortment of utility functions
+ * 
+ * Original Source referenced from https://github.com/toji/webvr.info
+ * 
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ */
 
 window.VRSamplesUtil = (function () {
 
